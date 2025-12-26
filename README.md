@@ -65,7 +65,7 @@ Video2Note 是一款基于 AI 的桌面应用，能够分析视频字幕内容�
 ### 1. 克隆项目
 
 ```bash
-git clone https://github.com/your-username/video2note.git
+git clone https://github.com/Charlo-O/Video2Note.git
 cd video2note
 ```
 
