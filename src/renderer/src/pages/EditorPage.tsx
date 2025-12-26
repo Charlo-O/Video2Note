@@ -4,10 +4,9 @@
 
 import { useRef, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import ReactMarkdown from 'react-markdown'
 import {
   ArrowLeft,
-  Play,
-  Pause,
   Clock,
   Trash2,
   Download,
@@ -21,8 +20,6 @@ export default function EditorPage() {
   const videoRef = useRef<HTMLVideoElement>(null)
   
   const { videoPath, notes, updateNote, deleteNote } = useProjectStore()
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [currentTime, setCurrentTime] = useState(0)
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null)
 
   // 如果没有笔记数据，返回首页
@@ -32,14 +29,12 @@ export default function EditorPage() {
     }
   }, [notes, navigate])
 
-  // 视频时间更新
+  // 视频时间更新 - 高亮当前播放位置对应的笔记
   useEffect(() => {
     const video = videoRef.current
     if (!video) return
 
     const handleTimeUpdate = () => {
-      setCurrentTime(video.currentTime)
-      
       // 高亮当前时间对应的笔记
       const currentNote = notes.find((note, index) => {
         const nextNote = notes[index + 1]
@@ -51,17 +46,10 @@ export default function EditorPage() {
       }
     }
 
-    const handlePlay = () => setIsPlaying(true)
-    const handlePause = () => setIsPlaying(false)
-
     video.addEventListener('timeupdate', handleTimeUpdate)
-    video.addEventListener('play', handlePlay)
-    video.addEventListener('pause', handlePause)
 
     return () => {
       video.removeEventListener('timeupdate', handleTimeUpdate)
-      video.removeEventListener('play', handlePlay)
-      video.removeEventListener('pause', handlePause)
     }
   }, [notes])
 
@@ -73,35 +61,14 @@ export default function EditorPage() {
     }
   }
 
-  // 播放/暂停
-  const togglePlay = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause()
-      } else {
-        videoRef.current.play()
-      }
-    }
-  }
-
-  // 格式化时间
-  const formatTime = (seconds: number) => {
-    const h = Math.floor(seconds / 3600)
-    const m = Math.floor((seconds % 3600) / 60)
-    const s = Math.floor(seconds % 60)
-    if (h > 0) {
-      return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
-    }
-    return `${m}:${s.toString().padStart(2, '0')}`
-  }
 
   return (
-    <div className="h-screen flex flex-col bg-gray-900 text-white">
+    <div className="h-screen flex flex-col bg-white text-gray-900">
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-gray-700/50 shrink-0">
+      <header className="flex items-center justify-between px-6 py-4 border-b border-gray-200 shrink-0">
         <button
           onClick={() => navigate('/')}
-          className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+          className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
           <span>返回</span>
@@ -121,38 +88,20 @@ export default function EditorPage() {
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left: Video Player */}
-        <div className="w-[40%] flex flex-col border-r border-gray-700/50">
+        <div className="w-[40%] flex flex-col border-r border-gray-200">
           <div className="flex-1 bg-black flex items-center justify-center">
             {videoPath ? (
               <video
                 ref={videoRef}
                 src={`file://${videoPath}`}
                 className="max-w-full max-h-full"
-                onClick={togglePlay}
+                controls
               />
             ) : (
-              <div className="text-gray-500">无视频</div>
+              <div className="text-gray-400">无视频</div>
             )}
           </div>
 
-          {/* Video Controls */}
-          <div className="p-4 bg-gray-800/50">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={togglePlay}
-                className="p-2 rounded-full bg-blue-600 hover:bg-blue-700 transition-colors"
-              >
-                {isPlaying ? (
-                  <Pause className="w-5 h-5" />
-                ) : (
-                  <Play className="w-5 h-5" />
-                )}
-              </button>
-              <span className="text-sm text-gray-400 font-mono">
-                {formatTime(currentTime)}
-              </span>
-            </div>
-          </div>
         </div>
 
         {/* Right: Notes List */}
@@ -190,18 +139,18 @@ function NoteCard({ note, isActive, onSeek, onUpdate, onDelete }: NoteCardProps)
       className={`
         rounded-xl border transition-all
         ${isActive 
-          ? 'border-blue-500 bg-blue-500/10' 
-          : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
+          ? 'border-blue-500 bg-blue-50' 
+          : 'border-gray-200 bg-gray-50 hover:border-gray-300'
         }
       `}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700/50">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
         <button
           onClick={onSeek}
-          className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors"
+          className="flex items-center gap-2 text-blue-500 hover:text-blue-600 transition-colors"
         >
           <Clock className="w-4 h-4" />
           <span className="font-mono text-sm">{note.timestamp}</span>
@@ -210,7 +159,7 @@ function NoteCard({ note, isActive, onSeek, onUpdate, onDelete }: NoteCardProps)
         {isHovered && (
           <button
             onClick={onDelete}
-            className="p-1 text-gray-500 hover:text-red-400 transition-colors"
+            className="p-1 text-gray-400 hover:text-red-500 transition-colors"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -224,7 +173,7 @@ function NoteCard({ note, isActive, onSeek, onUpdate, onDelete }: NoteCardProps)
           type="text"
           value={note.title}
           onChange={(e) => onUpdate({ title: e.target.value })}
-          className="w-full text-lg font-semibold bg-transparent border-none outline-none placeholder-gray-500"
+          className="w-full text-lg font-semibold bg-transparent border-none outline-none text-gray-900 placeholder-gray-400"
           placeholder="章节标题"
         />
 
@@ -237,7 +186,7 @@ function NoteCard({ note, isActive, onSeek, onUpdate, onDelete }: NoteCardProps)
               className="w-full rounded-lg"
             />
             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-              <button className="flex items-center gap-2 px-3 py-2 bg-gray-800 rounded-lg text-sm">
+              <button className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg text-sm text-gray-700">
                 <ImageIcon className="w-4 h-4" />
                 微调截图
               </button>
@@ -245,19 +194,22 @@ function NoteCard({ note, isActive, onSeek, onUpdate, onDelete }: NoteCardProps)
           </div>
         )}
 
-        {/* Content */}
-        <textarea
-          value={note.content}
-          onChange={(e) => onUpdate({ content: e.target.value })}
-          className="w-full min-h-[100px] bg-transparent border-none outline-none resize-none text-gray-300 placeholder-gray-500"
-          placeholder="笔记内容..."
-          style={{ height: 'auto' }}
-          onInput={(e) => {
-            const target = e.target as HTMLTextAreaElement
-            target.style.height = 'auto'
-            target.style.height = target.scrollHeight + 'px'
-          }}
-        />
+        {/* Content - 使用 ReactMarkdown 渲染 */}
+        <div className="prose prose-sm max-w-none text-gray-700">
+          <ReactMarkdown
+            components={{
+              img: ({ ...props }) => (
+                <img
+                  {...props}
+                  className="w-full max-w-2xl rounded-lg my-4"
+                  style={{ display: 'block' }}
+                />
+              )
+            }}
+          >
+            {note.content}
+          </ReactMarkdown>
+        </div>
       </div>
     </div>
   )

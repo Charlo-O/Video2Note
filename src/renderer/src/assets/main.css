@@ -1,1 +1,9 @@
 @import "tailwindcss";
+
+/* 渐变文字样式 - 参考 LogoCraft AI 设计 */
+.gradient-text {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}

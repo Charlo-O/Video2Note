@@ -4,6 +4,7 @@
 
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import ReactMarkdown from 'react-markdown'
 import {
   ArrowLeft,
   FileText,
@@ -95,12 +96,12 @@ export default function ExportPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-white text-gray-900">
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-gray-700/50 print:hidden">
+      <header className="flex items-center justify-between px-6 py-4 border-b border-gray-200 print:hidden">
         <button
           onClick={() => navigate('/editor')}
-          className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+          className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
           <span>返回编辑</span>
@@ -111,7 +112,7 @@ export default function ExportPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={handleCopy}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
           >
             {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
             <span>{copied ? '已复制' : '复制'}</span>
@@ -134,9 +135,9 @@ export default function ExportPage() {
       </header>
 
       {/* Options */}
-      <div className="px-6 py-4 border-b border-gray-700/50 print:hidden">
+      <div className="px-6 py-4 border-b border-gray-200 print:hidden">
         <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-400">图片处理:</span>
+          <span className="text-sm text-gray-500">图片处理:</span>
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="radio"
@@ -163,13 +164,13 @@ export default function ExportPage() {
       {/* Preview */}
       <div className="flex">
         {/* Markdown Source */}
-        <div className="w-1/2 border-r border-gray-700/50 print:hidden">
+        <div className="w-1/2 border-r border-gray-200 print:hidden">
           <div className="p-4">
-            <div className="flex items-center gap-2 mb-4 text-gray-400">
+            <div className="flex items-center gap-2 mb-4 text-gray-500">
               <FileText className="w-4 h-4" />
               <span className="text-sm font-medium">Markdown 源码</span>
             </div>
-            <pre className="p-4 bg-gray-800 rounded-lg overflow-auto max-h-[calc(100vh-200px)] text-sm text-gray-300 font-mono whitespace-pre-wrap">
+            <pre className="p-4 bg-gray-50 border border-gray-200 rounded-lg overflow-auto max-h-[calc(100vh-200px)] text-sm text-gray-700 font-mono whitespace-pre-wrap">
               {markdown}
             </pre>
           </div>
@@ -178,15 +179,15 @@ export default function ExportPage() {
         {/* Rendered Preview */}
         <div className="w-1/2 print:w-full">
           <div className="p-4">
-            <div className="flex items-center gap-2 mb-4 text-gray-400 print:hidden">
+            <div className="flex items-center gap-2 mb-4 text-gray-500 print:hidden">
               <FileDown className="w-4 h-4" />
               <span className="text-sm font-medium">预览</span>
             </div>
-            <div className="prose prose-invert max-w-none p-6 bg-gray-800 rounded-lg print:bg-white print:text-black print:prose-gray">
+            <div className="prose max-w-none p-6 bg-gray-50 border border-gray-200 rounded-lg print:bg-white print:text-black">
               {notes.map((note, index) => (
                 <div key={note.id} className="mb-8">
                   <h2 className="text-xl font-bold mb-2">{note.title}</h2>
-                  <p className="text-sm text-gray-400 print:text-gray-600 mb-4">
+                  <p className="text-sm text-gray-500 print:text-gray-600 mb-4">
                     时间戳: {note.timestamp}
                   </p>
                   {note.imagePath && (
@@ -196,11 +197,23 @@ export default function ExportPage() {
                       className="w-full max-w-lg rounded-lg mb-4"
                     />
                   )}
-                  <div className="text-gray-300 print:text-gray-800 whitespace-pre-wrap">
-                    {note.content}
+                  <div className="text-gray-700 print:text-gray-800 prose prose-sm max-w-none">
+                    <ReactMarkdown
+                      components={{
+                        img: ({ ...props }) => (
+                          <img
+                            {...props}
+                            className="w-full max-w-2xl rounded-lg my-4"
+                            style={{ display: 'block' }}
+                          />
+                        )
+                      }}
+                    >
+                      {note.content}
+                    </ReactMarkdown>
                   </div>
                   {index < notes.length - 1 && (
-                    <hr className="my-6 border-gray-700 print:border-gray-300" />
+                    <hr className="my-6 border-gray-200 print:border-gray-300" />
                   )}
                 </div>
               ))}

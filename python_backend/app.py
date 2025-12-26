@@ -4,6 +4,7 @@ Video2Note - FastAPI Backend
 """
 
 import os
+import re
 import uuid
 import tempfile
 from typing import Optional
@@ -106,28 +107,74 @@ async def analyze_video(request: AnalyzeRequest):
         
         # 3. 提取关键帧并构建笔记节点
         notes = []
+        
+        # 用于缓存已提取的帧，避免重复提取
+        frame_cache = {}
+        
+        def get_frame_for_timestamp(ts: str) -> str:
+            """获取指定时间戳的帧图片路径，使用缓存避免重复提取"""
+            if ts in frame_cache:
+                return frame_cache[ts]
+            try:
+                secs = timestamp_to_seconds(ts)
+                path = extract_frame(
+                    video_path=request.video_path,
+                    timestamp_seconds=secs,
+                    output_dir=output_dir
+                )
+                frame_cache[ts] = path
+                return path
+            except Exception as e:
+                print(f"Warning: Failed to extract frame at {ts}: {e}")
+                frame_cache[ts] = ""
+                return ""
+        
+        def process_content_timestamps(content: str) -> str:
+            """处理content中的时间戳标记，替换为图片Markdown"""
+            # 匹配 [HH:MM:SS] 或 [MM:SS] 格式的时间戳
+            pattern = r'\[(\d{1,2}:\d{2}(?::\d{2})?)\]'
+            
+            def replace_timestamp(match):
+                ts = match.group(1)
+                # 补全为 HH:MM:SS 格式
+                if ts.count(':') == 1:
+                    ts = '00:' + ts
+                img_path = get_frame_for_timestamp(ts)
+                print(f"[DEBUG] 时间戳 {ts} -> 图片路径: {img_path}")
+                if img_path and os.path.exists(img_path):
+                    # 使用绝对路径并转换为正斜杠
+                    abs_path = os.path.abspath(img_path).replace('\\', '/')
+                    markdown_img = f'\n\n![{ts}](file:///{abs_path})\n\n'
+                    print(f"[DEBUG] 生成Markdown: {markdown_img}")
+                    return markdown_img
+                else:
+                    print(f"[DEBUG] 跳过时间戳 {ts}，图片路径无效或不存在")
+                    return match.group(0)  # 无法提取则保留原文
+            
+            return re.sub(pattern, replace_timestamp, content)
+        
         for item in llm_results:
             timestamp = item.get("timestamp", "00:00:00")
             seconds = timestamp_to_seconds(timestamp)
+            content = item.get("content", "")
             
-            # 提取帧
-            try:
-                image_path = extract_frame(
-                    video_path=request.video_path,
-                    timestamp_seconds=seconds,
-                    output_dir=output_dir
-                )
-            except Exception as e:
-                print(f"Warning: Failed to extract frame at {timestamp}: {e}")
-                image_path = ""
+            # 提取章节主图
+            main_image_path = get_frame_for_timestamp(timestamp)
+            if main_image_path:
+                main_image_path = os.path.abspath(main_image_path).replace('\\', '/')
+            
+            # 处理content中的时间戳标记，替换为图片
+            processed_content = process_content_timestamps(content)
+            print(f"[DEBUG] 章节 {timestamp} - 主图: {main_image_path}")
+            print(f"[DEBUG] 处理后的content前100字符: {processed_content[:100]}")
             
             note = NoteNode(
                 id=uuid.uuid4().hex,
                 timestamp=timestamp,
                 seconds=seconds,
                 title=item.get("title", ""),
-                content=item.get("content", ""),
-                imagePath=image_path,
+                content=processed_content,
+                imagePath=main_image_path,
                 isEdited=False
             )
             notes.append(note)

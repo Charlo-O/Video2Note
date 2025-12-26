@@ -55,15 +55,15 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-lg bg-gray-800 rounded-2xl shadow-2xl border border-gray-700">
+      <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-gray-200">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
-          <h2 className="text-lg font-semibold text-white">设置</h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900">设置</h2>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg hover:bg-gray-700 transition-colors"
+            className="p-1 rounded-lg hover:bg-gray-100 transition-colors"
           >
-            <X className="w-5 h-5 text-gray-400" />
+            <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
 
@@ -71,7 +71,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
           {/* API Key */}
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-300">
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
               <Key className="w-4 h-4" />
               API Key
             </label>
@@ -81,12 +81,12 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
                 placeholder="sk-..."
-                className="w-full px-4 py-3 bg-gray-900 border border-gray-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors"
               />
               <button
                 type="button"
                 onClick={() => setShowApiKey(!showApiKey)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 hover:text-white"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 hover:text-gray-900"
               >
                 {showApiKey ? '隐藏' : '显示'}
               </button>
@@ -95,7 +95,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
           {/* Base URL */}
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-300">
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
               <Globe className="w-4 h-4" />
               API Base URL (可选)
             </label>
@@ -104,14 +104,14 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               value={baseUrl}
               onChange={(e) => setBaseUrl(e.target.value)}
               placeholder="https://api.openai.com/v1"
-              className="w-full px-4 py-3 bg-gray-900 border border-gray-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors"
             />
-            <p className="text-xs text-gray-500">留空使用默认地址，或填入自定义代理地址</p>
+            <p className="text-xs text-gray-400">留空使用默认地址，或填入自定义代理地址</p>
           </div>
 
           {/* Model */}
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-300">
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
               <Cpu className="w-4 h-4" />
               模型
             </label>
@@ -123,8 +123,8 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   onClick={() => setModel(m.value)}
                   className={`px-3 py-1.5 text-xs rounded-lg border transition-all ${
                     model === m.value
-                      ? 'border-blue-500 bg-blue-500/20 text-blue-400'
-                      : 'border-gray-600 text-gray-400 hover:border-gray-500'
+                      ? 'border-blue-500 bg-blue-50 text-blue-600'
+                      : 'border-gray-200 text-gray-600 hover:border-gray-300'
                   }`}
                 >
                   {m.label}
@@ -137,14 +137,14 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               value={model}
               onChange={(e) => setModel(e.target.value)}
               placeholder="或直接输入模型名称，如 gpt-4o-mini"
-              className="w-full px-4 py-3 bg-gray-900 border border-gray-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors font-mono text-sm"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors font-mono text-sm"
             />
-            <p className="text-xs text-gray-500">支持任何 OpenAI 兼容 API 的模型名称</p>
+            <p className="text-xs text-gray-400">支持任何 OpenAI 兼容 API 的模型名称</p>
           </div>
 
           {/* Output Style */}
           <div className="space-y-3">
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-300">
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
               <FileText className="w-4 h-4" />
               输出风格
             </label>
@@ -156,17 +156,17 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   className={`
                     flex items-start gap-3 p-4 rounded-xl border transition-all text-left
                     ${outputStyle === style.value
-                      ? 'border-blue-500 bg-blue-500/10'
-                      : 'border-gray-600 hover:border-gray-500 bg-gray-900/50'
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300 bg-gray-50'
                     }
                   `}
                 >
-                  <Sparkles className={`w-5 h-5 mt-0.5 ${outputStyle === style.value ? 'text-blue-400' : 'text-gray-500'}`} />
+                  <Sparkles className={`w-5 h-5 mt-0.5 ${outputStyle === style.value ? 'text-blue-500' : 'text-gray-400'}`} />
                   <div>
-                    <div className={`font-medium ${outputStyle === style.value ? 'text-white' : 'text-gray-300'}`}>
+                    <div className={`font-medium ${outputStyle === style.value ? 'text-gray-900' : 'text-gray-700'}`}>
                       {style.label}
                     </div>
-                    <div className="text-sm text-gray-500">{style.desc}</div>
+                    <div className="text-sm text-gray-400">{style.desc}</div>
                   </div>
                 </button>
               ))}
@@ -175,7 +175,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-700">
+        <div className="px-6 py-4 border-t border-gray-200">
           <button
             onClick={onClose}
             className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors"
