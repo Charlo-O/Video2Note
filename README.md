@@ -21,16 +21,25 @@ Video2Note 是一款基于 AI 的桌面应用，能够分析视频字幕内容�
 
 ## 🖼️ 界面预览
 
-### Setup 页面
+### 主页
+<img width="1920" height="1017" alt="image" src="https://github.com/user-attachments/assets/975274ae-9c9c-4c32-bf27-dc70ec7ddb5d" />
+
 - 拖拽或点击上传视频和字幕文件
+### 设置页
+<img width="1920" height="1017" alt="image" src="https://github.com/user-attachments/assets/50b9ba1c-1728-46d8-a7bb-7a01407f39ff" />
+
 - 配置 API Key、模型、输出风格
 
 ### Editor 页面
+<img width="1541" height="761" alt="image" src="https://github.com/user-attachments/assets/a13738e9-3668-41b8-a50e-1b7138133058" />
+
 - 左侧视频播放器，支持点击时间戳跳转
 - 右侧笔记卡片列表，可编辑标题和内容
 - 实时高亮当前播放位置对应的笔记
 
 ### Export 页面
+<img width="1541" height="869" alt="image" src="https://github.com/user-attachments/assets/19fa3eb1-a918-44d5-81ad-362f3e088fc1" />
+
 - Markdown 源码预览
 - 渲染效果预览
 - 一键复制、下载、打印
