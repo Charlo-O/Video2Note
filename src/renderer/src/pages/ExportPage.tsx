@@ -199,10 +199,13 @@ export default function ExportPage() {
                   )}
                   <div className="text-gray-700 print:text-gray-800 prose prose-sm max-w-none">
                     <ReactMarkdown
+                      urlTransform={(url) => url}
                       components={{
-                        img: ({ ...props }) => (
+                        img: ({ src, alt, ...props }) => (
                           <img
                             {...props}
+                            src={src}
+                            alt={alt}
                             className="w-full max-w-2xl rounded-lg my-4"
                             style={{ display: 'block' }}
                           />

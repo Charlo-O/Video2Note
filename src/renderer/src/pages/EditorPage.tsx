@@ -197,10 +197,13 @@ function NoteCard({ note, isActive, onSeek, onUpdate, onDelete }: NoteCardProps)
         {/* Content - 使用 ReactMarkdown 渲染 */}
         <div className="prose prose-sm max-w-none text-gray-700">
           <ReactMarkdown
+            urlTransform={(url) => url}
             components={{
-              img: ({ ...props }) => (
+              img: ({ src, alt, ...props }) => (
                 <img
                   {...props}
+                  src={src}
+                  alt={alt}
                   className="w-full max-w-2xl rounded-lg my-4"
                   style={{ display: 'block' }}
                 />
