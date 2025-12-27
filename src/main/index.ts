@@ -147,6 +147,17 @@ app.whenReady().then(() => {
     return { path: filePath, content }
   })
 
+  ipcMain.handle('select-image-file', async () => {
+    const result = await dialog.showOpenDialog({
+      properties: ['openFile'],
+      filters: [{ name: 'Image', extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'] }]
+    })
+    if (result.canceled || result.filePaths.length === 0) {
+      return null
+    }
+    return result.filePaths[0]
+  })
+
   createWindow()
 
   app.on('activate', function () {

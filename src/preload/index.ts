@@ -5,7 +5,8 @@ import { electronAPI } from '@electron-toolkit/preload'
 const api = {
   selectVideoFile: (): Promise<string | null> => ipcRenderer.invoke('select-video-file'),
   selectSubtitleFile: (): Promise<{ path: string; content: string } | null> =>
-    ipcRenderer.invoke('select-subtitle-file')
+    ipcRenderer.invoke('select-subtitle-file'),
+  selectImageFile: (): Promise<string | null> => ipcRenderer.invoke('select-image-file')
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

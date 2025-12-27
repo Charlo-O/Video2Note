@@ -2,7 +2,7 @@
  * 编辑器页面 - 双栏布局，左侧视频预览，右侧笔记编辑
  */
 
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, type ReactElement } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import {
@@ -15,7 +15,18 @@ import {
 import { useProjectStore } from '@/stores'
 import type { NoteNode } from '@/types'
 
-export default function EditorPage() {
+function toFileUrl(filePath: string): string {
+  const normalized = filePath.replace(/\\/g, '/')
+  if (/^[a-zA-Z]:\//.test(normalized)) {
+    return `file:///${normalized}`
+  }
+  if (normalized.startsWith('/')) {
+    return `file://${normalized}`
+  }
+  return `file:///${normalized}`
+}
+
+export default function EditorPage(): ReactElement {
   const navigate = useNavigate()
   const videoRef = useRef<HTMLVideoElement>(null)
   
@@ -34,7 +45,7 @@ export default function EditorPage() {
     const video = videoRef.current
     if (!video) return
 
-    const handleTimeUpdate = () => {
+    const handleTimeUpdate = (): void => {
       // 高亮当前时间对应的笔记
       const currentNote = notes.find((note, index) => {
         const nextNote = notes[index + 1]
@@ -54,7 +65,7 @@ export default function EditorPage() {
   }, [notes])
 
   // 跳转到指定时间
-  const seekTo = (seconds: number) => {
+  const seekTo = (seconds: number): void => {
     if (videoRef.current) {
       videoRef.current.currentTime = seconds
       videoRef.current.play()
@@ -131,8 +142,77 @@ interface NoteCardProps {
   onDelete: () => void
 }
 
-function NoteCard({ note, isActive, onSeek, onUpdate, onDelete }: NoteCardProps) {
+function NoteCard({ note, isActive, onSeek, onUpdate, onDelete }: NoteCardProps): ReactElement {
   const [isHovered, setIsHovered] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [draftContent, setDraftContent] = useState(note.content ?? '')
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  useEffect(() => {
+    if (!isEditing) {
+      setDraftContent(note.content ?? '')
+    }
+  }, [isEditing, note.content])
+
+  const updateDraft = (next: string, selectionStart?: number, selectionEnd?: number): void => {
+    setDraftContent(next)
+    requestAnimationFrame(() => {
+      const el = textareaRef.current
+      if (!el) return
+      if (selectionStart != null && selectionEnd != null) {
+        el.focus()
+        el.setSelectionRange(selectionStart, selectionEnd)
+      }
+    })
+  }
+
+  const wrapSelection = (before: string, after: string): void => {
+    const el = textareaRef.current
+    if (!el) return
+    const value = draftContent
+    const start = el.selectionStart ?? 0
+    const end = el.selectionEnd ?? 0
+    const selected = value.slice(start, end)
+    const next = value.slice(0, start) + before + selected + after + value.slice(end)
+    updateDraft(next, start + before.length, end + before.length)
+  }
+
+  const prefixSelectedLines = (prefix: string): void => {
+    const el = textareaRef.current
+    if (!el) return
+    const value = draftContent
+    const start = el.selectionStart ?? 0
+    const end = el.selectionEnd ?? 0
+    const lineStart = value.lastIndexOf('\n', start - 1) + 1
+    const selectedBlock = value.slice(lineStart, end)
+    const lines = selectedBlock.split('\n')
+    const nextBlock = lines.map((l) => (l.length ? `${prefix}${l}` : l)).join('\n')
+    const next = value.slice(0, lineStart) + nextBlock + value.slice(end)
+    updateDraft(next, lineStart, lineStart + nextBlock.length)
+  }
+
+  const handleSaveContent = (): void => {
+    onUpdate({ content: draftContent })
+    setIsEditing(false)
+  }
+
+  const handleCancelEdit = (): void => {
+    setIsEditing(false)
+  }
+
+  const handleInsertImage = async (): Promise<void> => {
+    const filePath = await window.api.selectImageFile()
+    if (!filePath) return
+    const url = toFileUrl(filePath)
+
+    const el = textareaRef.current
+    const value = draftContent
+    const start = el?.selectionStart ?? value.length
+    const end = el?.selectionEnd ?? value.length
+    const snippet = `\n\n![image](${url})\n\n`
+    const next = value.slice(0, start) + snippet + value.slice(end)
+    updateDraft(next, start + 2, start + snippet.length - 2)
+  }
 
   return (
     <div
@@ -194,25 +274,127 @@ function NoteCard({ note, isActive, onSeek, onUpdate, onDelete }: NoteCardProps)
           </div>
         )}
 
-        {/* Content - 使用 ReactMarkdown 渲染 */}
-        <div className="prose prose-sm max-w-none text-gray-700">
-          <ReactMarkdown
-            urlTransform={(url) => url}
-            components={{
-              img: ({ src, alt, ...props }) => (
-                <img
-                  {...props}
-                  src={src}
-                  alt={alt}
-                  className="w-full max-w-2xl rounded-lg my-4"
-                  style={{ display: 'block' }}
-                />
-              )
-            }}
-          >
-            {note.content}
-          </ReactMarkdown>
-        </div>
+        {!isEditing ? (
+          <div className="space-y-2">
+            <div className="flex justify-end">
+              <button
+                onClick={() => setIsEditing(true)}
+                className="px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                编辑正文
+              </button>
+            </div>
+            <div className="prose prose-sm max-w-none text-gray-700">
+              <ReactMarkdown
+                urlTransform={(url) => url}
+                components={{
+                  img: ({ src, alt, ...props }) => (
+                    <img
+                      {...props}
+                      src={src}
+                      alt={alt}
+                      className="w-full max-w-2xl rounded-lg my-4"
+                      style={{ display: 'block' }}
+                    />
+                  )
+                }}
+              >
+                {note.content}
+              </ReactMarkdown>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <button
+                onClick={() => wrapSelection('**', '**')}
+                className="px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                加粗
+              </button>
+              <button
+                onClick={() => wrapSelection('*', '*')}
+                className="px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                斜体
+              </button>
+              <button
+                onClick={() => wrapSelection('`', '`')}
+                className="px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                行内代码
+              </button>
+              <button
+                onClick={() => prefixSelectedLines('## ')}
+                className="px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                标题
+              </button>
+              <button
+                onClick={() => prefixSelectedLines('- ')}
+                className="px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                列表
+              </button>
+              <button
+                onClick={() => prefixSelectedLines('> ')}
+                className="px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                引用
+              </button>
+              <button
+                onClick={() => wrapSelection('[', '](https://)')}
+                className="px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                链接
+              </button>
+              <button
+                onClick={handleInsertImage}
+                className="px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                插入图片
+              </button>
+              <button
+                onClick={handleCancelEdit}
+                className="px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleSaveContent}
+                className="px-3 py-2 text-sm bg-blue-600 hover:bg-blue-700 rounded-lg text-white"
+              >
+                完成
+              </button>
+            </div>
+
+            <textarea
+              ref={textareaRef}
+              value={draftContent}
+              onChange={(e) => setDraftContent(e.target.value)}
+              className="w-full min-h-[220px] p-3 text-sm border border-gray-200 rounded-lg bg-white outline-none focus:ring-2 focus:ring-blue-500"
+            />
+
+            <div className="prose prose-sm max-w-none text-gray-700 border border-gray-200 rounded-lg bg-gray-50 p-3">
+              <ReactMarkdown
+                urlTransform={(url) => url}
+                components={{
+                  img: ({ src, alt, ...props }) => (
+                    <img
+                      {...props}
+                      src={src}
+                      alt={alt}
+                      className="w-full max-w-2xl rounded-lg my-4"
+                      style={{ display: 'block' }}
+                    />
+                  )
+                }}
+              >
+                {draftContent}
+              </ReactMarkdown>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
